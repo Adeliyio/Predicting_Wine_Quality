@@ -1,0 +1,431 @@
+---
+title: 'Predicting Wine Quality Using 6 Models'
+author: "ADELIYI OLUTOMIWA"
+output: 
+    html_document:
+        toc: true
+        toc_float: true
+        theme: lumen
+---
+<style>
+body {
+text-align: justify}
+</style>
+
+
+
+# 1.0 *INTRODUCTION*
+
+Wine quality assessment is a complex and critical task for winemakers and sommeliers alike. The quality of wine can be influenced by numerous factors, such as grape varieties, growing conditions, and wine making techniques. Accurate prediction of wine quality can help producers maintain consistent quality standards and identify potential improvements in their wine making processes.
+
+In this project, we aim to develop and compare several machine learning models to predict the quality of red wine based on its physico-chemical properties. The [dataset](https://www.kaggle.com/datasets/yasserh/wine-quality-dataset) used in this analysis contains information on 1599 red wines, with 12 variables describing their chemical composition. The target variable is the quality of the wine, which has been categorized into six classes (from 3 to 8) based on sensory evaluations.
+
+The main objective of this study is to build robust models that can accurately classify wine quality based on its chemical properties.
+
+# *2.0 METHODOLOGY*
+
+### **1. Data**
+
+The data used in this study consists of a collection of red wines and their associated chemical attributes and quality ratings. The dataset is obtained from a reliable source (provide the source) and contains both numerical and categorical variables. The target variable is the quality rating of the wines, while the chemical attributes such as alcohol content, volatile acidity, citric acid, density, pH, and sulphates serve as the predictors.
+
+### **2. Data Pre-processing**
+
+Before conducting the analysis, the dataset undergoes a pre-processing phase to ensure its quality and suitability for modeling. 
+
+### **3. Exploratory Data Analysis (EDA)**
+
+The EDA section involves a comprehensive exploration of the dataset to gain insights into the relationships between variables and the distribution of the target variable. Key steps in this section include:
+
+Summary statistics to understand the central tendencies and variabilities of the numerical variables.
+Several data visualization techniques to identify patterns, trends, and potential relationships between attributes and wine quality.
+
+Correlation analysis to assess the interdependence between the predictors and check for multicollinearity.
+
+### **4. Model Development**
+
+In this phase, the wine dataset is divided into a training set and a validation set to build and assess predictive models. The following algorithms are considered for model development:
+
++ Decision Tree: 
+
+A simple decision tree classifier is constructed to predict wine quality based on the chemical attributes.
+
++ Random Forest:
+
+A more robust ensemble method, the Random Forest algorithm, is utilized to improve prediction accuracy.
+
++ XGBoost:
+
+Extreme Gradient Boosting, a powerful gradient boosting algorithm, is employed for predictive modeling.
+
++ Naive Bayes: 
+
+A probabilistic algorithm, Naive Bayes, is applied as a baseline model for comparison.
+
++ Gradient Boosting Regression (GBM):
+
+This algorithm is used to assess the performance of a regression-based approach.
+
++ Support Vector Machine (SVM):
+
+A Support Vector Machine (SVM) is utilized as another classification algorithm to predict wine quality based on chemical attributes. SVM is known for its effectiveness in dealing with both linear and non-linear relationships in data. It is used to explore how SVM performs compared to other classification methods in this specific context
+
+## **5. Model Evaluation**
+
+To evaluate the performance of the models, the validation set is used to assess how well the models generalize to unseen data. The following evaluation metrics are employed:
+
+Accuracy: The proportion of correctly classified wine quality ratings.
+Precision, Recall (Sensitivity), and F1-score: Additional metrics to assess the model's ability to correctly predict specific quality ratings.
+Confusion Matrix: Provides a comprehensive view of the model's performance across all classes.
+Cross-validation: To validate the models further and mitigate potential bias in the evaluation.
+
+## **6. Results and Conclusion**
+
+In the Results section, the performance of each model is presented, highlighting their respective accuracies, precision, recall, and F1-scores. The strengths and weaknesses of the models are discussed in the context of wine quality prediction.
+
+The Conclusion section summarizes the findings of the study, identifies the most effective model for wine quality classification, and discusses potential areas of improvement for future research.
+
+Overall, this methodology aims to employ a systematic approach to analyze the dataset, build robust predictive models, and provide valuable insights into the factors influencing wine quality.
+
+
+
+
+# *3.0 EDA*
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Load the relevant libraries
+library(readr)
+library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(gbm)
+library(GGally)
+library(plotly)
+library(caret)
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(xgboost)
+library(e1071)
+library(h2o)
+library(viridis)
+library(knitr)
+
+# Read CSV file
+wine <- read_csv("winequality-red.csv")
+
+# Preprocess - Correct column names and turn quality variable into factor
+colnames(wine) <- str_replace_all(colnames(wine), " ", "_")
+wine$quality <- as.factor(wine$quality)
+
+# Data Exploration and Visualization
+head(wine,10)
+str(wine)
+summary(wine)
+
+```
+
+
+Exploratory Data Analysis (EDA) is a crucial step in the data analysis process, aimed at understanding the structure and characteristics of the dataset. In this section, we will explore the dataset containing information about red wines and their chemical attributes, as well as quality ratings.
+
+### **1. Data Distribution Analysis**
+
+Let's begin by analyzing the data distribution of each numerical attribute in the dataset.
+
+### **Fixed Acidity:**
+
+The fixed acidity of the wines ranges from 4.60 to 15.90, with a mean value of approximately 8.32. The distribution appears to be approximately normal, with no significant skewness or outliers.
+
+### **Volatile Acidity:** 
+
+The volatile acidity ranges from 0.1200 to 1.5800, with a mean value of approximately 0.5278. The distribution is slightly right-skewed, suggesting that most wines have low volatile acidity.
+
+### **Citric Acid**
+
+The citric acid content ranges from 0.000 to 1.000, with a mean value of approximately 0.271. The distribution appears to be right-skewed, indicating that a majority of wines have lower citric acid content.
+
+### **Residual Sugar:**
+
+The residual sugar content ranges from 0.900 to 15.500, with a mean value of approximately 2.539. The distribution is right-skewed, indicating that most wines have lower residual sugar content.
+
+### **Chlorides:** 
+
+The chlorides content ranges from 0.01200 to 0.61100, with a mean value of approximately 0.08747. The distribution is right-skewed, suggesting that the majority of wines have lower chloride content.
+
+### **Free Sulfur Dioxide:**
+
+The free sulfur dioxide ranges from 1.00 to 72.00, with a mean value of approximately 15.87. The distribution appears to be slightly right-skewed, indicating that most wines have lower free sulfur dioxide levels.
+
+### **Total Sulfur Dioxide:**
+
+The total sulfur dioxide ranges from 6.00 to 289.00, with a mean value of approximately 46.47. The distribution is right-skewed, suggesting that a majority of wines have lower total sulfur dioxide levels.
+
+### **Density:**
+
+The density of the wines ranges from 0.9901 to 1.0037, with a mean value of approximately 0.9967. The distribution is approximately normal, with no significant skewness or outliers.
+
+### **pH:**
+
+The pH values range from 2.740 to 4.010, with a mean value of approximately 3.311. The distribution is approximately normal, with no significant skewness or outliers.
+
+### **Sulphates:**
+
+The sulphates content ranges from 0.3300 to 2.0000, with a mean value of approximately 0.6581. The distribution appears to be slightly right-skewed, indicating that most wines have lower sulphate content.
+
+### **Alcohol:**
+
+The alcohol content ranges from 8.40 to 14.90, with a mean value of approximately 10.42. The distribution appears to be approximately normal, with no significant skewness or outliers.
+
+### **Quality:**
+
+The quality ratings range from 3 to 8, with the most frequent ratings being 5 and 6. The dataset contains 10 samples with a quality rating of 3, 53 samples with a rating of 4, 681 samples with a rating of 5, 638 samples with a rating of 6, 199 samples with a rating of 7, and 18 samples with the highest rating of 8.
+
+Overall, the numerical attributes exhibit various distributions, with some slight skewness observed in a few of them. The quality ratings are relatively well-distributed across the dataset, with no significant class imbalance. The data distribution analysis provides valuable insights into the dataset's characteristics, serving as a basis for further explorations and model development.
+
+### **2. Visualisation of Variables**
+
+```{r fig.width = 10, fig.height = 6, warning = FALSE}
+# Interactive Graph 1
+plot_ly(wine, x = ~alcohol, y = ~volatile_acidity, size = ~sulphates,
+        type = "scatter", mode = "markers", color = ~quality, colors = viridisLite::viridis(6), text = ~quality) %>%
+  layout(title = "Wine Quality",
+         xaxis = list(title = 'Alcohol'),
+         yaxis = list(title = 'Volatile Acidity'),
+         coloraxis = list(colorscale = "Viridis", colorbar = list(title = "Quality")))
+
+#  Interactive Graph 2
+plot_ly(wine, x = ~alcohol, y = ~volatile_acidity, z = ~sulphates, color = ~quality, 
+        hoverinfo = 'text', colors = viridisLite::viridis(6), 
+        text = ~paste('Quality:', quality, '<br>Alcohol:', alcohol, '<br>Volatile Acidity:', volatile_acidity, '<br>Sulphates:', sulphates)) %>% 
+  add_markers(opacity = 0.8) %>% 
+  layout(title = "3D Wine Quality",
+         scene = list(xaxis = list(title = 'Alcohol'),
+                      yaxis = list(title = 'Volatile Acidity'),
+                      zaxis = list(title = 'Sulphates')),
+         margin = list(l = 0, r = 0, b = 0, t = 40), # Adjust margin for better title display
+         annotations = list(yref = 'paper', xref = "paper", y = 1.05, x = 1.1, text = "Quality", showarrow = FALSE),
+         coloraxis = list(colorscale = "Viridis", colorbar = list(title = "Quality")))
+
+
+```
+
+
+
+# *4.0 MODEL EVALUATION*
+
+In this section, we assess the performance of various machine learning models on the wine quality dataset. The models considered for evaluation are Decision Tree (rpart), Random Forest, XGBoost, Naive Bayes, Gradient Boosting Regression, and Support Vector Machine (SVM). The evaluation is based on the accuracy metric, which measures the percentage of correctly predicted wine quality ratings.
+
+```{r fig.width = 12, fig.height = 6, warning = FALSE}
+
+# Cross Validation Setup
+set.seed(1)
+inTrain <- createDataPartition(wine$quality, p = 0.9, list = FALSE)
+train <- wine[inTrain,]
+valid <- wine[-inTrain,]
+
+# Decision Tree via rpart
+rpart_model <- rpart(quality ~ alcohol + volatile_acidity + citric_acid + density + pH + sulphates, train)
+rpart.plot(rpart_model)
+rpart_result <- predict(rpart_model, newdata = valid[, !colnames(valid) %in% "quality"], type = 'class')
+confusionMatrix(rpart_result, valid$quality)
+varImp(rpart_model) %>% as.data.frame() %>% kable()
+
+# Extract accuracy from the confusion matrix
+accuracy_rpart <- confusionMatrix(rpart_result, valid$quality)$overall["Accuracy"]
+accuracy_rpart
+
+# Random Forest
+rf_model <- randomForest(quality ~ alcohol + volatile_acidity + citric_acid + density + pH + sulphates, train)
+rf_result <- predict(rf_model, newdata = valid[, !colnames(valid) %in% "quality"])
+confusionMatrix(rf_result, valid$quality)
+varImpPlot(rf_model)
+
+# Extract accuracy from the confusion matrix
+accuracy_rf <- confusionMatrix(rf_result, valid$quality)$overall["Accuracy"]
+accuracy_rf
+
+# xgboost with histogram
+data.train <- xgb.DMatrix(data = data.matrix(train[, !colnames(train) %in% "quality"]), label = train$quality)
+data.valid <- xgb.DMatrix(data = data.matrix(valid[, !colnames(valid) %in% "quality"]))
+parameters <- list(
+  booster = "gbtree",
+  silent = 0,
+  eta = 0.08,
+  gamma = 0.7,
+  max_depth = 8,
+  min_child_weight = 2,
+  subsample = 0.9,
+  colsample_bytree = 0.5,
+  colsample_bylevel = 1,
+  lambda = 1,
+  alpha = 0,
+  objective = "multi:softmax",
+  eval_metric = "merror",
+  num_class = 7,
+  seed = 1,
+  tree_method = "hist",
+  grow_policy = "lossguide"
+)
+xgb_model <- xgb.train(parameters, data.train, nrounds = 100)
+xgb_pred <- predict(xgb_model, data.valid)
+confusionMatrix(as.factor(xgb_pred + 2), valid$quality)
+
+
+# Extract accuracy from the confusion matrix
+accuracy_xgboost <- confusionMatrix(as.factor(xgb_pred + 2), valid$quality)$overall["Accuracy"]
+accuracy_xgboost
+
+# Naive Bayes
+nb_model <- naiveBayes(quality ~ alcohol + volatile_acidity + citric_acid + density + pH + sulphates, data = train)
+nb_result <- predict(nb_model, newdata = valid[, !colnames(valid) %in% "quality"])
+confusionMatrix(nb_result, valid$quality)
+
+# Extract accuracy from the confusion matrix
+accuracy_nb <- confusionMatrix(nb_result, valid$quality)$overall["Accuracy"]
+accuracy_nb
+
+# Gradient Boosting Regression
+gbm_model <- gbm(quality ~ alcohol + volatile_acidity + citric_acid + density + pH + sulphates, data = train, distribution = "gaussian", n.trees = 100)
+gbm_result <- predict.gbm(gbm_model, newdata = valid[, !colnames(valid) %in% "quality"])
+gbm_result <- round(gbm_result)
+
+
+# Convert variables to factors with the same levels
+gbm_result <- as.factor(gbm_result)
+valid$quality <- as.factor(valid$quality)
+
+# Create confusion matrix
+confusionMatrix(gbm_result, valid$quality)
+
+# Extract accuracy from the confusion matrix
+accuracy_gbm <- confusionMatrix(gbm_result, valid$quality)$overall["Accuracy"]
+accuracy_gbm
+# SVM
+svm_model <- svm(quality ~ alcohol + volatile_acidity + citric_acid + density + pH + sulphates, train)
+svm_result <- predict(svm_model, newdata = valid[, !colnames(valid) %in% "quality"])
+confusionMatrix(svm_result, valid$quality)
+
+# Extract accuracy from the confusion matrix
+accuracy_svm <- confusionMatrix(svm_result, valid$quality)$overall["Accuracy"]
+
+#Accuracies
+accuracy_rpart
+accuracy_rf
+accuracy_xgboost
+accuracy_nb
+accuracy_gbm
+accuracy_svm
+
+# Compare models
+model_names <- c("Decision Tree (rpart)", "Random Forest", "XGBoost", "Naive Bayes", "Gradient Boosting Regression", "SVM")
+accuracies <- c(0.5541, 0.6624, 0.6561, 0.6051, 0.0127, 0.5796)
+results <- data.frame(Model = model_names, Accuracy = accuracies)
+results <- results[order(results$Accuracy, decreasing = TRUE), ]
+results
+
+```
+
+### ***Decision Tree (rpart):***
+
+Accuracy: 55.41%
+The Decision Tree model using the rpart algorithm achieved an accuracy of 55.41%. The confusion matrix revealed a limited ability to predict wine quality, particularly for classes 3, 4, and 8, where the sensitivity was low.
+
+### ***Random Forest:***
+
+Accuracy: 66.24%
+The Random Forest model outperformed the Decision Tree with an accuracy of 66.24%. The confusion matrix showed improved predictions across all classes compared to the Decision Tree, resulting in better sensitivity and specificity.
+
+### ***XGBoost:***
+
+Accuracy: 65.61%
+XGBoost, a powerful gradient boosting algorithm, achieved an accuracy of 65.61%. The model performed well in predicting classes 5 and 7 but struggled with classes 3, 4, and 8.
+
+### ***Naive Bayes:***
+
+Accuracy: 60.51%
+The Naive Bayes model achieved an accuracy of 60.51%. While it showed good performance for classes 5 and 7, it faced challenges in predicting classes 3, 4, and 8.
+
+### ***Gradient Boosting Regression:***
+
+Accuracy: 1.27%
+The Gradient Boosting Regression model had the lowest accuracy at 1.27%. This indicates poor performance overall, and it seems the model struggled to predict any class effectively.
+
+### ***Support Vector Machine (SVM):***
+
+Accuracy: 57.96%
+The SVM model achieved an accuracy of 57.96%. While it showed high specificity for most classes, it struggled with low sensitivity in classes 3, 4, and 8.
+
+### ***Model Comparison:***
+
+Among the models evaluated, Random Forest achieved the highest accuracy of 66.24%, followed closely by XGBoost with an accuracy of 65.61%. Naive Bayes and SVM showed moderate performance, while the Decision Tree model had the lowest accuracy at 55.41%. The Gradient Boosting Regression model performed poorly with an accuracy of only 1.27%.
+
+```{r fig.width = 12, fig.height = 6, warning = FALSE}
+
+# Compare models
+model_names <- c("Decision Tree (rpart)", "Random Forest", "XGBoost", "Naive Bayes", "Gradient Boosting Regression", "SVM")
+accuracies <- c(0.5541, 0.6624, 0.6561, 0.6051, 0.0127, 0.5796)
+results <- data.frame(Model = model_names, Accuracy = accuracies)
+results <- results[order(results$Accuracy, decreasing = TRUE), ]
+results
+
+```
+
+
+Overall, the Random Forest and XGBoost models are recommended for further analysis and possible integration into a production environment due to their superior performance compared to other models. It's important to note that fine-tuning the hyperparameters and additional feature engineering might further improve the model's performance.
+
+
+# *5.0 RESULTS*
+
+The evaluation of various machine learning models on the wine quality dataset yielded the following accuracies:
+
++ Random Forest: 66.24%
++ XGBoost: 65.61%
++ Naive Bayes: 60.51%
++ SVM: 57.96%
++ Decision Tree (rpart): 55.41%
++ Gradient Boosting Regression: 1.27%
+
+Among these models, Random Forest and XGBoost exhibited the highest accuracies, showing promising predictive capabilities for wine quality. Naive Bayes and SVM achieved moderate accuracies, indicating a reasonable performance, while the Decision Tree model had a comparatively lower accuracy. The Gradient Boosting Regression model performed poorly with an accuracy of only 1.27%.
+
+# *6.0 CONCLUSION*
+
+In conclusion, the analysis of the wine quality dataset using various machine learning models demonstrated the potential to predict wine quality based on several chemical attributes. Random Forest and XGBoost emerged as the top-performing models, with accuracies of 66.24% and 65.61%, respectively. These models showcased a better ability to generalize and predict wine quality ratings accurately.
+
+Naive Bayes and SVM also presented reasonable performances, but their accuracies were lower than those of Random Forest and XGBoost. The Decision Tree model achieved moderate accuracy, while the Gradient Boosting Regression model struggled to make accurate predictions.
+
+
+# *7.0 REFERENCES*
+
++ Kuhn, M. (2020). caret:
+
+Classification and Regression Training. R package version 6.0-86. https://CRAN.R-project.org/package=caret
+
++ Robin, X., Turck, N., Hainard, A., Tiberti, N., Lisacek, F., Sanchez, J.-C., & Muller, M. (2011).
+
+pROC: an open-source package for R and S+ to analyze and compare ROC curves. BMC Bioinformatics, 12(1), 77.
+
++ Chen, T., & Guestrin, C. (2016). 
+
+XGBoost: A Scalable Tree Boosting System. Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, 785-794.
+
++ Breiman, L. (2001).
+
+Random forests. Machine Learning, 45(1), 5-32. 
+
++ Healy, K. (2018). 
+
+Data Visualization: A Practical Introduction. Princeton University Press. Retrieved from
+
++ Wickham, H., & Grolemund, G. (2017). 
+
+R for Data Science: Import, Tidy, Transform, Visualize, and Model Data. O’Reilly Media.
+
++ Wilke, C. O. (2019).
+
+Fundamentals of Data Visualization: A Primer on Making Informative and Compelling Figures. O’Reilly Media.
+
++ https://topepo.github.io/caret/index.html
+
+
